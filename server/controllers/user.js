@@ -89,7 +89,6 @@ exports.getUserLists = (req, res, next) => {
 exports.editUserById = (req, res, next) => {
     const email = req.params.id;
     console.log("editting-------------", email, req.body)
-    console.log(req)
     User.findOne({email}).then(user=>{
         console.log(user)
         if(user){

@@ -23,6 +23,14 @@
 
 @media (min-width: 768px) {
   .feed__status {
-    width: 30rem;
+    width: 50rem;
   }
+}
+
+.inputTag{
+  margin-right: 20px;
+  width: 150px;
+}
+.emailTag{
+  width: 250px ;
 }

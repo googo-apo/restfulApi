@@ -157,61 +157,6 @@ class Feed extends Component {
     this.setState({ isEditing: false, editPost: null });
   };
 
-  finishEditHandler = postData => {
-    this.setState({
-      editLoading: true
-    });
-    const formData = new FormData();
-    formData.append('title', postData.title);
-    formData.append('content', postData.content);
-    formData.append('image', postData.image);
-    let url = 'http://localhost:8080/feed/post';
-    let method = 'POST';
-    if (this.state.editPost) {
-      url = 'http://localhost:8080/feed/post/' + this.state.editPost._id;
-      method = 'PUT';
-    }
-
-    fetch(url, {
-      method: method,
-      body: formData,
-      headers: {
-        Authorization: 'Bearer ' + this.props.token
-      }
-    })
-      .then(res => {
-        if (res.status !== 200 && res.status !== 201) {
-          throw new Error('Creating or editing a post failed!');
-        }
-        return res.json();
-      })
-      .then(resData => {
-        const post = {
-          _id: resData.post._id,
-          title: resData.post.title,
-          content: resData.post.content,
-          creator: resData.post.creator,
-          createdAt: resData.post.createdAt
-        };
-        this.setState(prevState => {          
-          return {
-            isEditing: false,
-            editPost: null,
-            editLoading: false
-          };
-        });
-      })
-      .catch(err => {
-        console.log(err);
-        this.setState({
-          isEditing: false,
-          editPost: null,
-          editLoading: false,
-          error: err
-        });
-      });
-  };
-
   statusInputChangeHandler = (input, value) => {
     this.setState({ status: value });
   };
@@ -238,11 +183,12 @@ class Feed extends Component {
   }
 
   generateUserEditCom = () => {
-      return <div className="container">
-                <input type="text" defaultValue={this.state.userEditting.email} name="email" onChange={e=>this.onChangeEditting(e, "email")} />
-                <input type="text" defaultValue={this.state.userEditting.name} name="name" onChange={e=>this.onChangeEditting(e, "name")} />
-                <input type="text" defaultValue={this.state.userEditting.status} name="status" onChange={e=>this.onChangeEditting(e, "status")} />
-                <button className="btn btn-success" onClick={()=>this.editUser(this.state.userEdittingEmail)}>edit</button>
+      return <div style = {{}}>
+                <input type="text" defaultValue={this.state.userEditting.email} name="email" onChange={e=>this.onChangeEditting(e, "email")} className="inputTag emailTag"/>
+                <input type="text" defaultValue={this.state.userEditting.name} name="name" onChange={e=>this.onChangeEditting(e, "name")} style={{margineRight:'10px'}}className="inputTag" />
+                <input type="text" defaultValue={this.state.userEditting.status} name="status" onChange={e=>this.onChangeEditting(e, "status")} style={{margineRight:'10px'}} className="inputTag"/>
+                <button className="btn btn-info" onClick={()=>this.editUser(this.state.userEdittingEmail)} style={{marginRight:'10px'}}>edit</button>
+                <button className="btn btn-danger" onClick={()=>this.canceledit(this.state.userEdittingEmail)}>cancel</button>
              </div>
   }
 
@@ -258,13 +204,18 @@ class Feed extends Component {
     this.setState({userEditting : {email, name, status}});
   }
 
+  canceledit = () => {
+    this.setState({userEdittingEmail: ''})
+  }
+
   editUser = (email) => {
     console.log(this.state.userEditting, email)
     this.setState({userEdittingEmail: ''})
     fetch('http://localhost:8081/users/' + email, {
       method: 'PUT',
       headers: {
-        Authorization: 'Bearer ' + this.props.token
+        Authorization: 'Bearer ' + this.props.token,
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         email: this.state.userEditting.email,
@@ -287,7 +238,16 @@ class Feed extends Component {
         let tmpUser = this.state.users
         console.log(tmpUser)
         if(tmpUser){
-          tmpUser = tmpUser.filter(t => t.email !== resData.email)
+          tmpUser = tmpUser.filter(t => {
+            if(t.email === email){
+              console.log(resData)
+              t.email = resData.email
+              t.name = resData.name
+              t.status = resData.status
+            }
+            return t
+          })
+          console.log(tmpUser)
           this.setState({users: tmpUser})
         }
       })
@@ -341,8 +301,8 @@ class Feed extends Component {
           onCancelEdit={this.cancelEditHandler}
           onFinishEdit={this.finishEditHandler}
         />
-        {this.state.userEdittingEmail && this.generateUserEditCom()}
         <section className="feed__status">
+        {this.state.userEdittingEmail && this.generateUserEditCom()}
           <table className = "table">
             <thead>
               <tr>
