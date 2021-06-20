@@ -11,8 +11,18 @@ const app = express()
 
 app.use(bodyParser.json());
 app.use(cors());
+app.use((req, res, next) => {
+    console.log("middleware")
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader(
+      'Access-Control-Allow-Methods',
+      'OPTIONS, GET, POST, PUT, PATCH, DELETE'
+    );
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    next();
+  });
 
-app.use('/user', userRoute);
+app.use(userRoute);
 
 mongoose
     .connect('mongodb://localhost/myapp', {useUnifiedTopology: true})

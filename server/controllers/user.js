@@ -6,7 +6,7 @@ exports. signup = (req, res, next) => {
     const email = req.body.email;
     const name = req.body.name;
     const password = req.body.password;
-
+    console.log(req.body)
     bcrypt
         .hash(password, 12)
         .then(password => {
@@ -21,16 +21,21 @@ exports. signup = (req, res, next) => {
             res.status(201).json({ message: 'User created!', userId: result._id });
         })
         .catch(err => {
+            console.log("error---------------",err.code)
+            if(err.code === 11000){
+                res.status(423).json({duplicate:true})
+            }
             if (!err.statusCode) {
                 err.statusCode = 500;
             }
-            next(err);
+            next();
         });
 }
 
 exports.signin = (req, res, next) => {
     const email = req.body.email;
     const password = req.body.password;
+    console.log("login!", req.body)
     let loadedUser;    
     User
         .findOne({email: email})
@@ -75,17 +80,43 @@ exports.signin = (req, res, next) => {
 };
 
 exports.getUserLists = (req, res, next) => {
-    User.find({}).then(users=>console.log(users))
-    next()
+    console.log("getUserList")
+    User.find({}).then(users=>{
+        res.json(users)
+    })
 }
 
 exports.editUserById = (req, res, next) => {
-    const email = req.body.email;
-    User.findOne({email: email}).then(users=>console.log(users))
-    next()
+    const email = req.params.id;
+    console.log("editting-------------", email, req.body)
+    console.log(req)
+    User.findOne({email}).then(user=>{
+        console.log(user)
+        if(user){
+            user.email = req.body.email
+            user.name = req.body.name
+            user.status = req.body.status
+            user.save((err)=>{
+                // console.log("editing save  ",err)
+                if(err) return res.status(500).json({err: "err occured!"})
+                else return res.json(user)
+            })
+        }
+        else{
+            res.json({err:"user is not exist!"})
+        }
+    })
+    // next()
 }
 
 exports.delUserById = (req, res, next) => {
-    const email = req.body.email;
-    User.findOne({email: email}).then(users=>console.log(users))
+    const email = req.params.id;
+    console.log("delete", req.params)
+    User.findOneAndDelete({email:email}).then((user)=>{
+        console.log(user)
+        if(user === null){
+            res.json({err: "user is not exist!"})
+        }
+        res.json(user)
+    })
 }
